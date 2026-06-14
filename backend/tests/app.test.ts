@@ -107,4 +107,23 @@ describe("Inventory API", () => {
     expect(response.body).toHaveLength(1);
     expect(response.body[0].movement_type).toBe("IN");
   });
+
+  it("records bulk inventory movements", async () => {
+    const token = jwt.sign({ sub: 1, username: "admin" }, process.env.JWT_SECRET || "super-secret-key");
+    mockedQuery.mockResolvedValue({ rows: [] });
+
+    const response = await request(app)
+      .post("/api/inventory/movements/bulk")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        movements: [
+          { productId: 1, warehouseId: 1, quantity: 4, movementType: "IN" },
+          { productId: 2, warehouseId: 2, quantity: 7, movementType: "IN" }
+        ]
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.message).toContain("Bulk movements");
+    expect(response.body.count).toBe(2);
+  });
 });
