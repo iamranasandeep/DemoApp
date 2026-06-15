@@ -7,10 +7,13 @@ import {
   createMovement,
   createProduct,
   fetchLiveInventory,
-  fetchProducts
+  fetchProducts,
+  clearMessages
 } from "../slices/productSlice";
 import { fetchWarehouses } from "../slices/warehouseSlice";
+import { showToast } from "../slices/toastSlice";
 import { StockMovementPayload } from "../types";
+import LiveInventoryModal from "../components/LiveInventoryModal";
 
 const categoryOptions = [
   { id: 1, name: "Electronics" },
@@ -35,6 +38,7 @@ export default function DashboardPage() {
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [categoryId, setCategoryId] = useState(1);
+  const [isLiveInventoryModalOpen, setIsLiveInventoryModalOpen] = useState(false);
 
   const [singleMovement, setSingleMovement] = useState<StockMovementPayload>({
     productId: 1,
@@ -55,6 +59,27 @@ export default function DashboardPage() {
       navigate("/login", { replace: true });
     }
   }, [auth.token, navigate]);
+
+  // Show toast notifications when messages change
+  useEffect(() => {
+    if (productsState.actionMessage) {
+      dispatch(showToast({
+        message: productsState.actionMessage,
+        type: "success"
+      }));
+      dispatch(clearMessages());
+    }
+  }, [productsState.actionMessage, dispatch]);
+
+  useEffect(() => {
+    if (productsState.actionError) {
+      dispatch(showToast({
+        message: productsState.actionError,
+        type: "error"
+      }));
+      dispatch(clearMessages());
+    }
+  }, [productsState.actionError, dispatch]);
 
   const onSearch = (event: FormEvent) => {
     event.preventDefault();
@@ -78,7 +103,9 @@ export default function DashboardPage() {
   const onSingleMovement = (event: FormEvent) => {
     event.preventDefault();
     void dispatch(createMovement(singleMovement)).then(() => {
-      void dispatch(fetchLiveInventory(singleMovement.productId));
+      void dispatch(fetchLiveInventory(singleMovement.productId)).then(() => {
+        setIsLiveInventoryModalOpen(true);
+      });
     });
   };
 
@@ -236,8 +263,12 @@ export default function DashboardPage() {
                   <h3 className="font-semibold">{product.name}</h3>
                   <p className="mt-1 text-xs text-slate-500">{product.description || "No description"}</p>
                   <button
-                    className="mt-3 w-full rounded-md bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700"
-                    onClick={() => void dispatch(fetchLiveInventory(product.id))}
+                    className="mt-3 w-full rounded-md bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-100"
+                    onClick={() => {
+                      void dispatch(fetchLiveInventory(product.id)).then(() => {
+                        setIsLiveInventoryModalOpen(true);
+                      });
+                    }}
                   >
                     View Warehouse Quantities
                   </button>
@@ -246,33 +277,15 @@ export default function DashboardPage() {
             </div>
           </article>
 
-          <article className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <h2 className="text-lg font-bold">Live Inventory</h2>
-            {productsState.selectedLiveInventory ? (
-              <div className="mt-3">
-                <p className="mb-2 text-sm font-semibold text-slate-700">Total Quantity: {productsState.selectedLiveInventory.totalQuantity}</p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {productsState.selectedLiveInventory.warehouses.map((warehouse) => (
-                    <div className="rounded-lg border border-slate-200 px-3 py-2" key={warehouse.warehouse_id}>
-                      <p className="text-sm font-medium">{warehouse.warehouse_name}</p>
-                      <p className="text-xs text-slate-500">Quantity: {warehouse.quantity}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-slate-500">Pick a product to display warehouse-wise and total stock.</p>
-            )}
           </article>
-
-          {(productsState.actionMessage || productsState.actionError) && (
-            <article className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-              {productsState.actionMessage && <p className="text-sm font-semibold text-emerald-700">{productsState.actionMessage}</p>}
-              {productsState.actionError && <p className="text-sm font-semibold text-rose-600">{productsState.actionError}</p>}
-            </article>
-          )}
         </section>
       </main>
+
+      <LiveInventoryModal
+        isOpen={isLiveInventoryModalOpen}
+        liveInventory={productsState.selectedLiveInventory}
+        onClose={() => setIsLiveInventoryModalOpen(false)}
+      />
     </div>
   );
 }
