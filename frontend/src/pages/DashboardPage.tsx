@@ -50,7 +50,7 @@ export default function DashboardPage() {
   const [bulkText, setBulkText] = useState("1,1,10,IN\n2,2,3,OUT");
 
   useEffect(() => {
-    void dispatch(fetchProducts({ page: 1, limit: 30 }));
+    void dispatch(fetchProducts({ page: 1, limit: 10 }));
     void dispatch(fetchWarehouses());
   }, [dispatch]);
 
@@ -143,7 +143,7 @@ export default function DashboardPage() {
             <button
               className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
               onClick={() => void dispatch(logout())}
-            >
+              >
               Logout
             </button>
           </div>
@@ -275,8 +275,6 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-          </article>
-
           </article>
         </section>
       </main>
