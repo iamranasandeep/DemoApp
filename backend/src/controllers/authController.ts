@@ -21,7 +21,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ sub: user.id, username: user.username }, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
+    const token = jwt.sign({ sub: user.id, username: user.username }, env.jwtSecret, { expiresIn: env.jwtExpiresIn as any });
     return res.json({ token, user: { id: user.id, username: user.username } });
   } catch (error) {
     return next(error);
@@ -65,7 +65,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     const token = jwt.sign(
       { sub: newUser.id, username: newUser.username }, 
       env.jwtSecret, 
-      { expiresIn: env.jwtExpiresIn }
+      { expiresIn:env.jwtExpiresIn as any }
     );
 
     // 6. Return the token and user data
