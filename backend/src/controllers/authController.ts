@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
 import { z } from "zod";
 import { query } from "../db/pool";
 import { env } from "../config/env";
 import { revokeToken } from "../middleware/auth";
+// 1. Define your custom token payload shape
+
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {

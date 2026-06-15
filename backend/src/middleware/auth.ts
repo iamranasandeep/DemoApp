@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
-
+import { MyTokenPayload } from '../types';
 const revokedTokens = new Set<string>();
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
@@ -16,7 +16,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
   }
 
   try {
-    const decoded = jwt.verify(token, env.jwtSecret) as { sub: number; username: string };
+    const decoded = jwt.verify(token, env.jwtSecret) as unknown as MyTokenPayload;
     (req as Request & { user?: { id: number; username: string }; token?: string }).user = {
       id: Number(decoded.sub),
       username: decoded.username
